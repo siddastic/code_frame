@@ -1,3 +1,4 @@
+import 'package:code_frame/screens/game_screen.dart';
 import 'package:code_frame/widgets/background.dart';
 import 'package:code_frame/widgets/space.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,9 @@ class HomeScreen extends StatelessWidget {
             ),
             const Space(50),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).pushNamed(GameScreen.routeName);
+              },
               child: const Text(
                 "Play",
               ),

@@ -1,3 +1,4 @@
+import 'package:code_frame/screens/game_screen.dart';
 import 'package:code_frame/screens/home.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         HomeScreen.routeName: (context) => const HomeScreen(),
+        GameScreen.routeName: (context) => const GameScreen(),
       },
     );
   }
