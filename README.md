@@ -30,16 +30,16 @@ flutter run
 ## Screenshots
 
 ![App Screenshot](
-    https://github.com/siddastic/code_frame/blob/main/screenshots/ss1.png?raw=true
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss1.jpeg?raw=true
     )
 ![App Screenshot](
-    https://github.com/siddastic/code_frame/blob/main/screenshots/ss2.png?raw=true
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss2.jpeg?raw=true
     )
 ![App Screenshot](
-    https://github.com/siddastic/code_frame/blob/main/screenshots/ss3.png?raw=true
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss3.jpeg?raw=true
     )
 ![App Screenshot](
-    https://github.com/siddastic/code_frame/blob/main/screenshots/ss4.png?raw=true
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss4.jpeg?raw=true
     )
 
 
