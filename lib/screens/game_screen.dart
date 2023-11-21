@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:math';
 
 import 'package:code_frame/widgets/background.dart';
 import 'package:code_frame/widgets/space.dart';
+import 'package:code_frame/widgets/win_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
@@ -23,16 +26,16 @@ class _GameScreenState extends State<GameScreen> {
   StreamController<int> selected = StreamController<int>();
 
   Soundpool pool = Soundpool.fromOptions(
-    options: SoundpoolOptions(
+    options: const SoundpoolOptions(
       streamType: StreamType.music,
     ),
   );
   int? _spinSoundId;
   int? _winSoundId;
+  int currentWheelIndex = 0;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     (() async {
@@ -85,6 +88,7 @@ class _GameScreenState extends State<GameScreen> {
                     duration: const Duration(seconds: 1),
                     curve: Curves.decelerate,
                   ),
+                  duration: Duration(seconds: 5),
                   onFling: () {
                     selected.add(1);
                   },
@@ -121,7 +125,19 @@ class _GameScreenState extends State<GameScreen> {
             const Space(20),
             ElevatedButton(
               onPressed: () async {
-                selected.add(Random().nextInt(items.length));
+                currentWheelIndex = Random().nextInt(items.length);
+                selected.add(currentWheelIndex);
+                await Future.delayed(const Duration(seconds: 5));
+                showDialog(
+                  context: context,
+                  useSafeArea: false,
+                  builder: (ctx) {
+                    return WinDialog(
+                      endAnimColor: Colors.amber,
+                      message: "${items[currentWheelIndex]}!",
+                    );
+                  },
+                );
               },
               child: const Text("Spin"),
             ),
