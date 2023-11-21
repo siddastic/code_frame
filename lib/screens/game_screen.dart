@@ -23,6 +23,7 @@ class _GameScreenState extends State<GameScreen> {
   List<String> items =
       "Short walk, call a friend, 10-minute reading, write a gratitude journal, do 15 push-ups, listen to a favorite song, 5-minute meditation, drink a glass of water, relax and take a deep breath, compliment someone"
           .split(',');
+  List<String> history = [];
   StreamController<int> selected = StreamController<int>();
 
   Soundpool pool = Soundpool.fromOptions(
@@ -64,6 +65,7 @@ class _GameScreenState extends State<GameScreen> {
     return Scaffold(
       body: Background(
         child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           children: [
             Container(
               padding: const EdgeInsets.all(5),
@@ -88,7 +90,7 @@ class _GameScreenState extends State<GameScreen> {
                     duration: const Duration(seconds: 1),
                     curve: Curves.decelerate,
                   ),
-                  duration: Duration(seconds: 5),
+                  duration: const Duration(seconds: 5),
                   onFling: () {
                     selected.add(1);
                   },
@@ -127,6 +129,7 @@ class _GameScreenState extends State<GameScreen> {
               onPressed: () async {
                 currentWheelIndex = Random().nextInt(items.length);
                 selected.add(currentWheelIndex);
+                history.add(items[currentWheelIndex]);
                 await Future.delayed(const Duration(seconds: 5));
                 showDialog(
                   context: context,
@@ -138,9 +141,71 @@ class _GameScreenState extends State<GameScreen> {
                     );
                   },
                 );
+                setState(() {});
               },
               child: const Text("Spin"),
             ),
+            const Space(20),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xff14433e),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: const Color(0xff0c2e30),
+                  width: 3,
+                ),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    title: const Text(
+                      "History",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      onPressed: () {
+                        history.clear();
+                        setState(() {});
+                      },
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const Divider(
+                    height: 0,
+                    color: Color(0xff0c2e30),
+                  ),
+                  for (var i = 0; i < history.length; i++)
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xff0c2e30),
+                        borderRadius: i == history.length - 1
+                            ? const BorderRadius.only(
+                                bottomLeft: Radius.circular(28),
+                                bottomRight: Radius.circular(28))
+                            : null,
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          history[i],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Space(50),
           ],
         ),
       ),
