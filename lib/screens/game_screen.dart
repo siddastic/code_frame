@@ -4,7 +4,9 @@ import 'dart:math';
 import 'package:code_frame/widgets/background.dart';
 import 'package:code_frame/widgets/space.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
+import 'package:soundpool/soundpool.dart';
 
 class GameScreen extends StatefulWidget {
   static const routeName = '/game';
@@ -20,9 +22,37 @@ class _GameScreenState extends State<GameScreen> {
           .split(',');
   StreamController<int> selected = StreamController<int>();
 
+  Soundpool pool = Soundpool.fromOptions(
+    options: SoundpoolOptions(
+      streamType: StreamType.music,
+    ),
+  );
+  int? _spinSoundId;
+  int? _winSoundId;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    (() async {
+      _spinSoundId = await rootBundle
+          .load("assets/sfx/spin.mp3")
+          .then((ByteData soundData) {
+        return pool.load(soundData);
+      });
+      _winSoundId = await rootBundle
+          .load("assets/sfx/win.mp3")
+          .then((ByteData soundData) {
+        return pool.load(soundData);
+      });
+    }());
+  }
+
   @override
   void dispose() {
     selected.close();
+    pool.dispose();
     super.dispose();
   }
 
@@ -58,6 +88,12 @@ class _GameScreenState extends State<GameScreen> {
                   onFling: () {
                     selected.add(1);
                   },
+                  onAnimationStart: () {
+                    _spinSoundId != null ? pool.play(_spinSoundId!) : null;
+                  },
+                  onAnimationEnd: () {
+                    _winSoundId != null ? pool.play(_winSoundId!) : null;
+                  },
                   animateFirst: false,
                   selected: selected.stream,
                   items: [
@@ -84,7 +120,7 @@ class _GameScreenState extends State<GameScreen> {
             ),
             const Space(20),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 selected.add(Random().nextInt(items.length));
               },
               child: const Text("Spin"),
