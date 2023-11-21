@@ -1,3 +1,4 @@
+import 'package:code_frame/constants/sources.dart';
 import 'package:flutter/material.dart';
 
 class Background extends StatelessWidget {
@@ -11,7 +12,7 @@ class Background extends StatelessWidget {
       height: MediaQuery.of(context).size.height,
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/background.png'),
+          image: AssetImage(Sources.backgroundImage),
           repeat: ImageRepeat.repeat,
         ),
       ),

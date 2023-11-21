@@ -1,16 +1,53 @@
-# code_frame
+# Code Frame Assignment App
 
-A new Flutter project.
+Features :
+- Add Actions
+- Delete Actions
+- History Logs
 
-## Getting Started
+## Running the app locally
 
-This project is a starting point for a Flutter application.
+### Clone the repository
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+git clone https://github.com/siddastic/code_frame.git
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Install dependencies
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Run in project root directory
+
+```bash
+flutter pub get
+```
+
+### Run the app
+
+```bash
+flutter run
+```
+
+## Screenshots
+
+![App Screenshot](
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss1.png?raw=true
+    )
+![App Screenshot](
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss2.png?raw=true
+    )
+![App Screenshot](
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss3.png?raw=true
+    )
+![App Screenshot](
+    https://github.com/siddastic/code_frame/blob/main/screenshots/ss4.png?raw=true
+    )
+
+
+## Tech Stack
+
+**Client:** Flutter, Dart
+
+
+## Download apk
+
+[Download apk](https://github.com/siddastic/code_frame/releases/download/v1/code_frame.apk)
