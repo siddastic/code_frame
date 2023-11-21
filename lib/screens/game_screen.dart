@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:code_frame/constants/colors.dart';
 import 'package:code_frame/widgets/background.dart';
 import 'package:code_frame/widgets/space.dart';
 import 'package:code_frame/widgets/win_dialog.dart';
@@ -105,6 +106,71 @@ class _GameScreenState extends State<GameScreen> {
                   items: [
                     for (var i = 0; i < items.length; i++)
                       FortuneItem(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (ctx) {
+                              return Container(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xff14433e),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(28),
+                                    topRight: Radius.circular(28),
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      title: const Text(
+                                        "Edit Action :",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      subtitle: Text(
+                                        items[i],
+                                        style: const TextStyle(
+                                          color: ConstantColors.midGrayText,
+                                        ),
+                                      ),
+                                    ),
+                                    const Divider(
+                                      height: 0,
+                                      color: Color(0xff0c2e30),
+                                    ),
+                                    ListTile(
+                                      onTap: () {
+                                        Navigator.of(context).pop();
+                                        if (items.length > 2) {
+                                          setState(() {
+                                            items.removeAt(i);
+                                          });
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .hideCurrentSnackBar();
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  "Atleast 2 items are required!"),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      leading: const Icon(
+                                        Icons.close,
+                                        color: Colors.red,
+                                      ),
+                                      title: const Text(
+                                        "Remove",
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
                         style: FortuneItemStyle(
                           color: i % 2 == 0
                               ? const Color(0xff066760)
