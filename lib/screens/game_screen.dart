@@ -4,12 +4,19 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:code_frame/constants/colors.dart';
+import 'package:code_frame/constants/sources.dart';
+import 'package:code_frame/providers/action_provider.dart';
+import 'package:code_frame/providers/history_provider.dart';
 import 'package:code_frame/widgets/background.dart';
+import 'package:code_frame/widgets/edit_action.dart';
+import 'package:code_frame/widgets/history_list.dart';
 import 'package:code_frame/widgets/space.dart';
+import 'package:code_frame/widgets/touchable_opacity.dart';
 import 'package:code_frame/widgets/win_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
+import 'package:provider/provider.dart';
 import 'package:soundpool/soundpool.dart';
 
 class GameScreen extends StatefulWidget {
@@ -22,10 +29,6 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   TextEditingController addActionController = TextEditingController();
-  List<String> items =
-      "Short walk, call a friend, 10-minute reading, write a gratitude journal, do 15 push-ups, listen to a favorite song, 5-minute meditation, drink a glass of water, relax and take a deep breath, compliment someone"
-          .split(',');
-  List<String> history = [];
   StreamController<int> selected = StreamController<int>();
 
   Soundpool pool = Soundpool.fromOptions(
@@ -40,19 +43,18 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    loadSFX();
+  }
 
-    (() async {
-      _spinSoundId = await rootBundle
-          .load("assets/sfx/spin.mp3")
-          .then((ByteData soundData) {
-        return pool.load(soundData);
-      });
-      _winSoundId = await rootBundle
-          .load("assets/sfx/win.mp3")
-          .then((ByteData soundData) {
-        return pool.load(soundData);
-      });
-    }());
+  void loadSFX() async {
+    _spinSoundId =
+        await rootBundle.load(Sources.spinMusic).then((ByteData soundData) {
+      return pool.load(soundData);
+    });
+    _winSoundId =
+        await rootBundle.load(Sources.winMusic).then((ByteData soundData) {
+      return pool.load(soundData);
+    });
   }
 
   void showAddActionPromptDialog() {
@@ -63,6 +65,7 @@ class _GameScreenState extends State<GameScreen> {
           title: const Text("Add Action"),
           content: TextField(
             controller: addActionController,
+            autofocus: true,
             decoration: const InputDecoration(
               hintText: "Enter action",
             ),
@@ -79,7 +82,8 @@ class _GameScreenState extends State<GameScreen> {
                 Navigator.of(context).pop();
                 if (addActionController.text.isNotEmpty) {
                   setState(() {
-                    items.add(addActionController.text);
+                    Provider.of<ActionsProvider>(context, listen: false)
+                        .addAction(addActionController.text);
                   });
                   addActionController.clear();
                 }
@@ -94,6 +98,8 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var actionsProvider = Provider.of<ActionsProvider>(context);
+    var historyProvider = Provider.of<HistoryProvider>(context, listen: false);
     return Scaffold(
       body: Background(
         child: ListView(
@@ -103,7 +109,7 @@ class _GameScreenState extends State<GameScreen> {
               padding: const EdgeInsets.all(5),
               margin: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: const Color(0xff0e292e),
+                color: ConstantColors.tileDarkest,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -135,87 +141,47 @@ class _GameScreenState extends State<GameScreen> {
                   animateFirst: false,
                   selected: selected.stream,
                   items: [
-                    for (var i = 0; i < items.length; i++)
+                    for (var i = 0; i < actionsProvider.actions.length; i++)
                       FortuneItem(
                         onTap: () {
                           showModalBottomSheet(
                             context: context,
                             builder: (ctx) {
-                              return Container(
-                                decoration: const BoxDecoration(
-                                  color: Color(0xff14433e),
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(28),
-                                    topRight: Radius.circular(28),
-                                  ),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ListTile(
-                                      title: const Text(
-                                        "Edit Action :",
-                                        style: TextStyle(color: Colors.white),
+                              return EditAction(
+                                onRemove: () {
+                                  Navigator.of(context).pop();
+                                  if (actionsProvider.actions.length > 2) {
+                                    setState(() {
+                                      actionsProvider.removeActionAtIndex(i);
+                                    });
+                                  } else {
+                                    ScaffoldMessenger.of(context)
+                                        .hideCurrentSnackBar();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            "Atleast 2 items are required!"),
                                       ),
-                                      subtitle: Text(
-                                        items[i],
-                                        style: const TextStyle(
-                                          color: ConstantColors.midGrayText,
-                                        ),
-                                      ),
-                                    ),
-                                    const Divider(
-                                      height: 0,
-                                      color: Color(0xff0c2e30),
-                                    ),
-                                    ListTile(
-                                      onTap: () {
-                                        Navigator.of(context).pop();
-                                        if (items.length > 2) {
-                                          setState(() {
-                                            items.removeAt(i);
-                                          });
-                                        } else {
-                                          ScaffoldMessenger.of(context)
-                                              .hideCurrentSnackBar();
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                  "Atleast 2 items are required!"),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      leading: const Icon(
-                                        Icons.close,
-                                        color: Colors.red,
-                                      ),
-                                      title: const Text(
-                                        "Remove",
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                    );
+                                  }
+                                },
+                                actionName: actionsProvider.actions[i],
                               );
                             },
                           );
                         },
                         style: FortuneItemStyle(
                           color: i % 2 == 0
-                              ? const Color(0xff066760)
-                              : const Color(0xff14433e),
-                          borderColor: const Color(0xff0c2e30),
+                              ? ConstantColors.tileLight
+                              : ConstantColors.tileDark,
+                          borderColor: ConstantColors.tileDarkest,
                           borderWidth: 3,
                           textStyle: const TextStyle(
                             fontSize: 10,
                             color: Colors.black,
                           ),
                         ),
-                        child: Text(
-                          items[i],
-                        ),
+                        child: Text(actionsProvider.actions[i]),
                       ),
                   ],
                 ),
@@ -227,94 +193,41 @@ class _GameScreenState extends State<GameScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      currentWheelIndex = Random().nextInt(items.length);
+                      currentWheelIndex =
+                          Random().nextInt(actionsProvider.actions.length);
                       selected.add(currentWheelIndex);
-                      history.add(items[currentWheelIndex]);
                       await Future.delayed(const Duration(seconds: 5));
-                      showDialog(
+                      await showDialog(
                         context: context,
                         useSafeArea: false,
                         builder: (ctx) {
                           return WinDialog(
                             endAnimColor: Colors.amber,
-                            message: "${items[currentWheelIndex]}!",
+                            message:
+                                "${actionsProvider.actions[currentWheelIndex]}!",
                           );
                         },
                       );
-                      setState(() {});
+                      historyProvider.addAction(
+                          actionsProvider.actions[currentWheelIndex]);
                     },
                     child: const Text("Spin"),
                   ),
                 ),
                 Space.horizontal,
                 ElevatedButton(
-                    onPressed: showAddActionPromptDialog,
-                    child: Icon(
-                      Icons.add,
-                    )),
+                  onPressed: showAddActionPromptDialog,
+                  child: const Icon(
+                    Icons.add,
+                  ),
+                ),
               ],
             ),
             const Space(20),
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xff14433e),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: const Color(0xff0c2e30),
-                  width: 3,
-                ),
-              ),
-              child: Column(
-                children: [
-                  ListTile(
-                    title: const Text(
-                      "History",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                    trailing: IconButton(
-                      onPressed: () {
-                        history.clear();
-                        setState(() {});
-                      },
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const Divider(
-                    height: 0,
-                    color: Color(0xff0c2e30),
-                  ),
-                  for (var i = 0; i < history.length; i++)
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xff0c2e30),
-                        borderRadius: i == history.length - 1
-                            ? const BorderRadius.only(
-                                bottomLeft: Radius.circular(28),
-                                bottomRight: Radius.circular(28))
-                            : null,
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          history[i],
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            const HistoryList(),
             const Space(50),
+            const MadeWithLove(),
+            const Space(20),
           ],
         ),
       ),
@@ -326,5 +239,35 @@ class _GameScreenState extends State<GameScreen> {
     selected.close();
     pool.dispose();
     super.dispose();
+  }
+}
+
+class MadeWithLove extends StatelessWidget {
+  const MadeWithLove({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: const TextSpan(
+          text: 'Made with ❤ By ',
+          style: TextStyle(
+            color: ConstantColors.lighterGrayText,
+            fontWeight: FontWeight.w500,
+          ),
+          children: <TextSpan>[
+            TextSpan(
+              text: 'SiD',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

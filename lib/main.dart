@@ -1,9 +1,20 @@
+import 'package:code_frame/providers/action_provider.dart';
+import 'package:code_frame/providers/history_provider.dart';
 import 'package:code_frame/screens/game_screen.dart';
 import 'package:code_frame/screens/home.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ActionsProvider()),
+        ChangeNotifierProvider(create: (_) => HistoryProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,7 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Code Frame',
+      title: 'Code Frame Assignment',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
