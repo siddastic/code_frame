@@ -9,12 +9,14 @@ import 'package:code_frame/providers/action_provider.dart';
 import 'package:code_frame/providers/history_provider.dart';
 import 'package:code_frame/widgets/background.dart';
 import 'package:code_frame/widgets/edit_action.dart';
+import 'package:code_frame/widgets/game_button.dart';
 import 'package:code_frame/widgets/history_list.dart';
 import 'package:code_frame/widgets/space.dart';
-import 'package:code_frame/widgets/touchable_opacity.dart';
 import 'package:code_frame/widgets/win_dialog.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:provider/provider.dart';
 import 'package:soundpool/soundpool.dart';
@@ -29,8 +31,8 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   TextEditingController addActionController = TextEditingController();
-  StreamController<int> selected = StreamController<int>();
-
+  StreamController<int> wheelStream = StreamController<int>();
+  bool isSpinning = false;
   Soundpool pool = Soundpool.fromOptions(
     options: const SoundpoolOptions(
       streamType: StreamType.music,
@@ -96,6 +98,31 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  void spinWheel(
+      ActionsProvider actionsProvider, HistoryProvider historyProvider) async {
+    if (isSpinning) return;
+    setState(() {
+      isSpinning = true;
+    });
+    currentWheelIndex = Random().nextInt(actionsProvider.actions.length);
+    wheelStream.add(currentWheelIndex);
+    await Future.delayed(const Duration(seconds: 5));
+    await showDialog(
+      context: context,
+      useSafeArea: false,
+      builder: (ctx) {
+        return WinDialog(
+          endAnimColor: Colors.amber,
+          message: "${actionsProvider.actions[currentWheelIndex]}!",
+        );
+      },
+    );
+    historyProvider.addAction(actionsProvider.actions[currentWheelIndex]);
+    setState(() {
+      isSpinning = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var actionsProvider = Provider.of<ActionsProvider>(context);
@@ -130,7 +157,7 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   duration: const Duration(seconds: 5),
                   onFling: () {
-                    selected.add(currentWheelIndex);
+                    wheelStream.add(currentWheelIndex);
                   },
                   onAnimationStart: () {
                     _spinSoundId != null ? pool.play(_spinSoundId!) : null;
@@ -139,7 +166,7 @@ class _GameScreenState extends State<GameScreen> {
                     _winSoundId != null ? pool.play(_winSoundId!) : null;
                   },
                   animateFirst: false,
-                  selected: selected.stream,
+                  selected: wheelStream.stream,
                   items: [
                     for (var i = 0; i < actionsProvider.actions.length; i++)
                       FortuneItem(
@@ -179,52 +206,51 @@ class _GameScreenState extends State<GameScreen> {
                           textStyle: const TextStyle(
                             fontSize: 10,
                             color: Colors.black,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         child: Text(actionsProvider.actions[i]),
                       ),
                   ],
+                  indicators: const [
+                    FortuneIndicator(
+                      alignment: Alignment.topCenter,
+                      child: TriangleIndicator(
+                        color: ConstantColors.tileDarkest,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ).animate().fadeIn(),
             const Space(20),
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      currentWheelIndex =
-                          Random().nextInt(actionsProvider.actions.length);
-                      selected.add(currentWheelIndex);
-                      await Future.delayed(const Duration(seconds: 5));
-                      await showDialog(
-                        context: context,
-                        useSafeArea: false,
-                        builder: (ctx) {
-                          return WinDialog(
-                            endAnimColor: Colors.amber,
-                            message:
-                                "${actionsProvider.actions[currentWheelIndex]}!",
-                          );
-                        },
-                      );
-                      historyProvider.addAction(
-                          actionsProvider.actions[currentWheelIndex]);
-                    },
-                    child: const Text("Spin"),
+                  child: GameButton(
+                    onPressed: () =>
+                        spinWheel(actionsProvider, historyProvider),
+                    label: "Spin",
+                    child: isSpinning
+                        ? const CupertinoActivityIndicator(
+                            radius: 15,
+                          )
+                        : null,
                   ),
                 ),
                 Space.horizontal,
-                ElevatedButton(
+                GameButton(
                   onPressed: showAddActionPromptDialog,
-                  child: const Icon(
+                  child: Icon(
                     Icons.add,
+                    color: Theme.of(context).primaryColor,
+                    size: 28,
                   ),
                 ),
               ],
-            ),
+            ).animate().fadeIn(delay: 100.ms),
             const Space(20),
-            const HistoryList(),
+            const HistoryList().animate().fadeIn(delay: 200.ms),
             const Space(50),
             const MadeWithLove(),
             const Space(20),
@@ -236,7 +262,7 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
-    selected.close();
+    wheelStream.close();
     pool.dispose();
     super.dispose();
   }
