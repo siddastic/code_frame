@@ -21,6 +21,7 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
+  TextEditingController addActionController = TextEditingController();
   List<String> items =
       "Short walk, call a friend, 10-minute reading, write a gratitude journal, do 15 push-ups, listen to a favorite song, 5-minute meditation, drink a glass of water, relax and take a deep breath, compliment someone"
           .split(',');
@@ -54,11 +55,41 @@ class _GameScreenState extends State<GameScreen> {
     }());
   }
 
-  @override
-  void dispose() {
-    selected.close();
-    pool.dispose();
-    super.dispose();
+  void showAddActionPromptDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("Add Action"),
+          content: TextField(
+            controller: addActionController,
+            decoration: const InputDecoration(
+              hintText: "Enter action",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (addActionController.text.isNotEmpty) {
+                  setState(() {
+                    items.add(addActionController.text);
+                  });
+                  addActionController.clear();
+                }
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -93,7 +124,7 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   duration: const Duration(seconds: 5),
                   onFling: () {
-                    selected.add(1);
+                    selected.add(currentWheelIndex);
                   },
                   onAnimationStart: () {
                     _spinSoundId != null ? pool.play(_spinSoundId!) : null;
@@ -191,25 +222,37 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
             const Space(20),
-            ElevatedButton(
-              onPressed: () async {
-                currentWheelIndex = Random().nextInt(items.length);
-                selected.add(currentWheelIndex);
-                history.add(items[currentWheelIndex]);
-                await Future.delayed(const Duration(seconds: 5));
-                showDialog(
-                  context: context,
-                  useSafeArea: false,
-                  builder: (ctx) {
-                    return WinDialog(
-                      endAnimColor: Colors.amber,
-                      message: "${items[currentWheelIndex]}!",
-                    );
-                  },
-                );
-                setState(() {});
-              },
-              child: const Text("Spin"),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      currentWheelIndex = Random().nextInt(items.length);
+                      selected.add(currentWheelIndex);
+                      history.add(items[currentWheelIndex]);
+                      await Future.delayed(const Duration(seconds: 5));
+                      showDialog(
+                        context: context,
+                        useSafeArea: false,
+                        builder: (ctx) {
+                          return WinDialog(
+                            endAnimColor: Colors.amber,
+                            message: "${items[currentWheelIndex]}!",
+                          );
+                        },
+                      );
+                      setState(() {});
+                    },
+                    child: const Text("Spin"),
+                  ),
+                ),
+                Space.horizontal,
+                ElevatedButton(
+                    onPressed: showAddActionPromptDialog,
+                    child: Icon(
+                      Icons.add,
+                    )),
+              ],
             ),
             const Space(20),
             Container(
@@ -276,5 +319,12 @@ class _GameScreenState extends State<GameScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    selected.close();
+    pool.dispose();
+    super.dispose();
   }
 }
