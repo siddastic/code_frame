@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:code_frame/widgets/background.dart';
+import 'package:code_frame/widgets/space.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 
@@ -28,7 +30,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Background(
-        child: Column(
+        child: ListView(
           children: [
             Container(
               padding: const EdgeInsets.all(5),
@@ -79,6 +81,13 @@ class _GameScreenState extends State<GameScreen> {
                   ],
                 ),
               ),
+            ),
+            const Space(20),
+            ElevatedButton(
+              onPressed: () {
+                selected.add(Random().nextInt(items.length));
+              },
+              child: const Text("Spin"),
             ),
           ],
         ),
